@@ -1,0 +1,16 @@
+{
+  "name": "discord-moderation-bot",
+  "version": "1.0.0",
+  "description": "Discord bot with auto-roles, moderation, and mass DM features",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["discord", "bot", "moderation"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "express": "^4.18.2"
+  }
+}
