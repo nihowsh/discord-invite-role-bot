@@ -245,12 +245,27 @@ client.on('interactionCreate', async (interaction) => {
             const members = await interaction.guild.members.fetch();
             const realMembers = members.filter(member => !member.user.bot);
 
+            const totalMembers = realMembers.size;
+            const MIN_DELAY = 12000;
+            const MAX_DELAY = 30000;
+
+            await interaction.editReply(`🚀 Mass DM started!\n👥 Sending to ${totalMembers} members\n⏱️ Random delay of 12-30 seconds between each DM\n📬 I'll DM you progress updates!`);
+
+            log(`💬 Mass DM initiated by ${interaction.user.tag} to ${totalMembers} members`);
+
+            const ownerUser = interaction.user;
+            try {
+                await ownerUser.send(`🚀 Starting mass DM to ${totalMembers} members in **${interaction.guild.name}**\n⏱️ Random delay of 12-30 seconds between each DM for safety\n📊 I'll update you every 25 messages!`);
+            } catch (error) {
+                log(`⚠️ Could not DM owner for progress updates: ${error.message}`);
+            }
+
             let successCount = 0;
             let failCount = 0;
-
-            log(`💬 Mass DM initiated by ${interaction.user.tag} to ${realMembers.size} members`);
+            let currentIndex = 0;
 
             for (const [id, member] of realMembers) {
+                currentIndex++;
                 try {
                     const dmOptions = { content: message };
                     if (attachment) {
@@ -258,14 +273,35 @@ client.on('interactionCreate', async (interaction) => {
                     }
                     await member.send(dmOptions);
                     successCount++;
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    if (currentIndex % 25 === 0) {
+                        try {
+                            await ownerUser.send(`📨 Progress Update\n📊 ${currentIndex}/${totalMembers} members processed\n✅ Sent: ${successCount} | ❌ Failed: ${failCount}`);
+                        } catch (error) {
+                            log(`⚠️ Could not send progress update: ${error.message}`);
+                        }
+                    }
+                    
+                    if (currentIndex < totalMembers) {
+                        const randomDelay = Math.floor(Math.random() * (MAX_DELAY - MIN_DELAY + 1)) + MIN_DELAY;
+                        await new Promise(resolve => setTimeout(resolve, randomDelay));
+                    }
                 } catch (error) {
                     failCount++;
+                    if (currentIndex < totalMembers) {
+                        const randomDelay = Math.floor(Math.random() * (MAX_DELAY - MIN_DELAY + 1)) + MIN_DELAY;
+                        await new Promise(resolve => setTimeout(resolve, randomDelay));
+                    }
                 }
             }
 
-            await interaction.editReply(`✅ Mass DM complete!\n📤 Successfully sent: ${successCount}\n❌ Failed: ${failCount}`);
-            log(`💬 Mass DM complete: ${successCount} sent, ${failCount} failed`);
+            try {
+                await ownerUser.send(`✅ Mass DM Complete!\n📤 Successfully sent: ${successCount}\n❌ Failed: ${failCount}\n👥 Total: ${totalMembers}\n🎯 Server: **${interaction.guild.name}**`);
+            } catch (error) {
+                log(`⚠️ Could not send completion message: ${error.message}`);
+            }
+            
+            log(`💬 Mass DM complete: ${successCount} sent, ${failCount} failed out of ${totalMembers}`);
         }
     } catch (error) {
         log(`❌ Error in interactionCreate: ${error.message}`);
