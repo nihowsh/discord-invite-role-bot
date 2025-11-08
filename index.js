@@ -325,3 +325,10 @@ client.login(process.env.DISCORD_BOT_TOKEN).catch(error => {
     log(`❌ Failed to login: ${error.message}`);
     process.exit(1);
 });
+
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => res.send('🤖 Bot is alive!'));
+app.listen(PORT, () => console.log(`🌐 Keep-alive server running on port ${PORT}`));
